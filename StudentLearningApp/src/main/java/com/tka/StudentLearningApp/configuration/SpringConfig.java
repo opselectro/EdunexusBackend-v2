@@ -20,109 +20,84 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SpringConfig {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+	@Autowired
+	private UserDetailsService userDetailsService;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-        try {
-            return http
-                    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                    .csrf(csrf -> csrf.disable())
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                            .requestMatchers("/user/**").hasAuthority("USER")
-                            .requestMatchers(
-                                    "/api/courses/viewAll",
-                                    "/api/contact/user/post",
-                                    "/api/enrollments/enroll",
-                                    "/api/courses/image/{courseId}",
-                                    "/api/enrollments/user/{userid}",
-                                    "/api/courses/admin/update/{courseId}",
-                                    "/api/courses/admin/add",
-                                    "/api/enrollments/admin/viewAllEnroll",
-                                    "/api/enrollments/admin/cancel/{id}",
-                                    "/api/contact/admin/get",
-                                    "/api/enrollments/admin/enrollment/stats",
-                                    "/api/enrollments/user/{userId}",
-                                    "/api/courses/search",
-                                    "/api/admin/test/add",
-                                    "/api/admin/test/delete/{id}",
-                                    "/api/admin/test/update/{id}",
-                                    "/api/admin/test/getResult",
-                                    "/api/users/test/getTest",
-                                    "/api/users/test/submit",
-                                    "/api/users/results/{username}",
-                                    "/api/users/register",
-                                    "/api/users/login",
-                                    "/api/users/update-password"
-                            ).permitAll()
-                            .anyRequest().authenticated()
-                    )
-                    .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
-                        response.sendError(401, "Unauthorized - Please log in");
-                    }))
-                    .httpBasic(Customizer.withDefaults())
-                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .build();
-        } catch (Exception e) {
-            System.err.println("Error configuring SecurityFilterChain: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Security configuration failed", e);
-        }
-    }
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+		try {
+			return http.cors(cors -> cors.configurationSource(corsConfigurationSource())).csrf(csrf -> csrf.disable())
+					.authorizeHttpRequests(auth -> auth
+						    .requestMatchers("/admin/**").hasAuthority("ADMIN")  
+						    .requestMatchers("/user/**").hasAuthority("USER") 
+						    .requestMatchers("/api/courses/viewAll","/api/contact/user/post").permitAll()
+						    .requestMatchers("/api/enrollments/enroll","/api/courses/image/{courseId}","/api/enrollments/user/{userid}").permitAll()
+						    
+						    .requestMatchers( "/api/courses/admin/update/{courseId}", "/api/courses/admin/add","/api/courses/image/{courseId}","/api/enrollments/admin/viewAllEnroll","/api/enrollments/admin/cancel/{id}","/api/contact/admin/get","/api/enrollments/admin/enrollment/stats").permitAll()
+						    .requestMatchers("/api/enrollments/user/{userId}", "/api/courses/search","/api/admin/test/add","/api/admin/test/delete/{id}","/api/admin/test/update/{id}","/api/admin/test/getResult","api/users/test/getTest","/api/users/test/submit","api/users/results/{username}").permitAll()
+						    .requestMatchers("/api/users/register", "/api/users/login", "/api/users/update-password").permitAll()
+						    
+						    .anyRequest().authenticated()  
+						)
+					.exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+						response.sendError(401, "Unauthorized - Please log in");
+					})).httpBasic(Customizer.withDefaults())
+					.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+					.build();
+		} catch (Exception e) {
+			System.err.println("Error configuring SecurityFilterChain: " + e.getMessage());
+			e.printStackTrace();
+			throw new RuntimeException("Security configuration failed", e);
+		}
+	}
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+	  @Bean
+	    public CorsConfigurationSource corsConfigurationSource() {
+	        CorsConfiguration configuration = new CorsConfiguration();
+	     
+	        configuration.setAllowedOrigins(List.of("https://edu-nexus-front-end-v2.vercel.app",
+	        		"https://edunexusbackend-v2-production.up.railway.app"
+	        		,"http://localhost:3000",
+	        		"*"
+	        		));
+	        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+	        configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Accept", "Origin", "X-Requested-With","multipart/form-data"));
+	        configuration.setExposedHeaders(List.of("Authorization"));
+	        configuration.setAllowCredentials(true);
 
-        // ✅ Allow your frontend URLs and mobile browsers
-        configuration.setAllowedOrigins(List.of(
-                "https://edu-nexus-front-end-v2.vercel.app",  // Your deployed frontend
-                
-                "https://edunexusbackend-v2-production.up.railway.app",// deployed backend
-                
-                "http://localhost:3000",                         // Local React frontend
-                
-                "*"                                            // Allow mobile public requests
-        ));
+	        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	        source.registerCorsConfiguration("/**", configuration);
+	        return source;
+	    }
 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Accept", "Origin", "X-Requested-With", "multipart/form-data"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder(12);
+	}
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder1() {
         return new BCryptPasswordEncoder();
     }
+	
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setPasswordEncoder(passwordEncoder());
+		provider.setUserDetailsService(userDetailsService);
+		return provider;
+	}
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(userDetailsService);
-        return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
+	}
 }
