@@ -86,6 +86,8 @@ public class SpringConfig {
         configuration.setAllowedOrigins(List.of(
                 "https://edu-nexus-front-end-v2.vercel.app",  // Your deployed frontend
                 
+                "https://edunexusbackend-v2-production.up.railway.app",// deployed backend
+                
                 "http://localhost:3000",                         // Local React frontend
                 
                 "*"                                            // Allow mobile public requests
