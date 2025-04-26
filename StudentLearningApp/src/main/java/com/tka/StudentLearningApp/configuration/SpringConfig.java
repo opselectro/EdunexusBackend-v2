@@ -63,8 +63,8 @@ public class SpringConfig {
 	        CorsConfiguration configuration = new CorsConfiguration();
 	     
 	        configuration.setAllowedOrigins(List.of("https://edu-nexus-front-end-v2.vercel.app",
-	        		"https://edunexusbackend-v2-production.up.railway.app"
-	        		,"http://localhost:3000",
+	        	
+	        		"http://localhost:3000",
 	        		"*"
 	        		));
 	        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
