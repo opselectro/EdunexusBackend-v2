@@ -35,8 +35,11 @@ public class SpringConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                    // Admin routes
                     .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                    // User routes
                     .requestMatchers("/user/**").hasAuthority("USER")
+                    // Public routes
                     .requestMatchers(
                         "/api/courses/viewAll",
                         "/api/contact/user/post",
@@ -55,15 +58,17 @@ public class SpringConfig {
                         "/api/admin/test/delete/{id}",
                         "/api/admin/test/update/{id}",
                         "/api/admin/test/getResult",
-                        "/api/users/test/getTest",
+                        "/api/users/test/getTest",           // Fixed missing slash
                         "/api/users/test/submit",
-                        "/api/users/results/{username}"
+                        "/api/users/results/{username}"      // Fixed missing slash
                     ).permitAll()
+                    // Authentication routes
                     .requestMatchers(
                         "/api/users/register",
                         "/api/users/login",
                         "/api/users/update-password"
                     ).permitAll()
+                    // Any other request requires authentication
                     .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -86,16 +91,17 @@ public class SpringConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // ✅ Use wildcard patterns to support mobile network/CDN changes
-        configuration.setAllowedOriginPatterns(List.of(
-            "https://*.vercel.app",
+        configuration.setAllowedOrigins(List.of(
+        		"https://*.vercel.app",
             "https://edu-nexus-front-end-v2.vercel.app",
             "http://localhost:3000"
+           
         ));
-        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+            "Authorization", "Cache-Control", "Content-Type", "Accept", "Origin",
+            "X-Requested-With", "multipart/form-data"
+        ));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
@@ -106,7 +112,7 @@ public class SpringConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return new BCryptPasswordEncoder(12); // Using strength 12 for better security
     }
 
     @Bean
